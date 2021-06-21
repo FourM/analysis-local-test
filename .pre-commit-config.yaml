@@ -1,0 +1,29 @@
+fail_fast: true
+repos:
+- repo: local
+  hooks:
+  - id: sort_imports_check
+    name: sort imports check
+    entry: pipenv run sort_imports_check
+    language: system
+    types: [python]
+    stages: [commit, push]
+  - id: format_check
+    name: format check
+    entry: pipenv run format_check
+    language: system
+    types: [python]
+    stages: [commit, push]
+  - id: lint
+    name: lint
+    entry: pipenv run lint
+    language: system
+    types: [python]
+    stages: [commit, push]
+  - id: type_check
+    name: type check
+    entry: pipenv run type_check
+    language: system
+    types: [python]
+    pass_filenames: false
+    stages: [commit, push]

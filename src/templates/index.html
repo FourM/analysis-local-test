@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style type="text/css">
+        .input-num {
+            width: 40px;
+        }
+    </style>
+</head>
+<body>
+<div style="display: flex;">
+    <div style="width: 25%; min-width: 450px">
+        <h3>Doc2Vec Search</h3>
+        <form>
+            <textarea style="width: 200px; height: 150px;" id="doc2vec"
+                      placeholder="input sentences..."></textarea><br/>
+            <button type="button" onclick="Doc2Vec()">output</button>
+        </form>
+        <hr/>
+        <h3>Sentiment Analytics, WordCloud</h3>
+        <form>
+            <input type="file" id="file" accept=".csv"/>
+        </form>
+        <div>
+            <input id="reviewName" type="text" width="100px" placeholder="Review Column Name"
+                   value="Reviews Content"/>
+        </div>
+        <div>
+            <input id="ratingName" type="text" width="100px" placeholder="Rating Column Name" value="Rating"/>
+        </div>
+        <b>Target Rating</b>
+        <form id="checkBox">
+            <input type="checkbox" checked="checked" value="1"/>1
+            <input type="checkbox" checked="checked" value="2"/>2
+            <input type="checkbox" checked="checked" value="3"/>3
+            <input type="checkbox" checked="checked" value="4"/>4
+            <input type="checkbox" checked="checked" value="5"/>5
+        </form>
+        <form>
+            <input type="date" id="startDate" value="2020-12-11"/>～<input type="date" id="endDate" value="2020-12-22"/>
+        </form>
+        <b>Sentiment Analytics</b>
+        <form>
+            <button type="button" onclick="send('all')">All</button>
+            <button type="button" onclick="send('positive')">Positive</button>
+            <button type="button" onclick="send('negative')">Negative</button>
+        </form>
+        <b>WordCloud</b>
+        <form>
+            height:<input type="number" id="vertical-num" class="input-num" value="640" min="180" max="960" step="10"/>px
+            width:<input type="number" id="horizontal-num" class="input-num" value="640" min="180" max="960" step="10"/>px
+            <button type="button" onclick="send()">WordCloud Output</button>
+        </form>
+        <hr/>
+        <h3>Social Listening</h3>
+        <form>
+            <label>
+                <input id="keywordList" placeholder="search keyword"/>
+                <button type="button" onclick="keywordSearch()">Search</button>
+            </label>
+        </form>
+        <h3>Follower Search</h3>
+        <form>
+            <label>
+                <input id="followerId" placeholder="target twitter ID"/>
+                <button type="button" onclick="followerSearch()">Search</button>
+            </label>
+        </form>
+    </div>
+    <div style="width: 80%; border-left: solid 1px black; padding-left: 10px">
+        <form>
+            <select id="language" name="language">
+                <option value="1">ja</option>
+                <option value="0">en</option>
+            </select>
+        </form>
+        <h3 id="resultTitle">Result</h3>
+        <ul id="result"></ul>
+    </div>
+</div>
+
+<script>
+    /**
+     * Display Doc2Vec analysis results
+     */
+    function Doc2Vec() {
+        let value = {
+            data: document.getElementById('doc2vec').value,
+            language: parseInt(document.getElementById('language').value),
+        };
+        fetch(`/api/doc2vec`, {
+            method: 'POST',
+            body: JSON.stringify(value),
+            headers: {'Content-Type': 'application/json'}
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            let result = data.results;
+            document.getElementById('resultTitle').innerText = `Result: Doc2Vec`;
+            document.getElementById('result').innerText = '';
+
+            let line = document.createElement('hr');
+            document.getElementById('result').appendChild(line);
+
+            result.forEach(item => {
+                let child = document.createElement('li');
+                child.innerHTML = `<b>Sentence:</b> ${item.sentence}<br/><b>Similarity:</b> ${item.similarity}%`;
+                document.getElementById('result').appendChild(child);
+
+                let line = document.createElement('hr');
+                document.getElementById('result').appendChild(line);
+            });
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+    /**
+     * Send post parameter(Sentiment or WordCloud)
+     *
+     * @param {string} outputType
+     */
+    function send(outputType = '') {
+        let fileData = document.getElementById('file').files[0];
+        if (fileData === undefined) {
+            alert('No file selected');
+        } else {
+            let reader = new FileReader();
+            let csvData = null;
+            let language = parseInt(document.getElementById('language').value);
+            reader.onload = function () {
+                csvData = reader.result;
+                if (outputType !== '') {
+                    Sentiment(csvData, outputType, language);
+                } else {
+                    WordCloud(csvData, language);
+                }
+            }
+            reader.readAsText(fileData, 'utf-8');
+        }
+    }
+
+    /**
+     * Display sentiment analysis results
+     *
+     * @param {string} csvData
+     * @param {string} outputType
+     * @param {int} language
+     */
+    function Sentiment(csvData, outputType, language) {
+        let reviews = findReviewsList(csvData);
+        let json = {
+            reviews: reviews,
+            outputType: outputType,
+            language: language,
+        };
+        fetch(`/api/sentiment`, {
+            method: 'POST',
+            body: JSON.stringify(json),
+            headers: {'Content-Type': 'application/json'}
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            let results = data.results;
+            document.getElementById('resultTitle').innerHTML = `Result: Sentiment Analytics`;
+            document.getElementById('result').innerHTML = '';
+            if (outputType !== 'all') {
+                document.getElementById('resultTitle').innerHTML += `(${outputType} only)`
+            }
+
+            let parent = document.createElement('ol');
+            parent.id = 'sentence_list';
+            document.getElementById('result').appendChild(parent);
+
+            results.forEach(item => {
+                let child = document.createElement('li');
+                child.innerHTML += `<b>Sentence:</b> ${item.text}<br/>`;
+                child.innerHTML += `<b>score:</b> ${item.score}`;
+                document.getElementById('sentence_list').appendChild(child);
+
+                let line = document.createElement('hr');
+                document.getElementById('sentence_list').appendChild(line);
+            });
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+    /**
+     * Display WordCloud analysis results
+     *
+     * @params {string} csvData
+     * @params {int} language
+     */
+    function WordCloud(csvData, language) {
+        let reviews = findReviewsList(csvData);
+        let outputHeight = document.getElementById('vertical-num').value;
+        let outputWidth = document.getElementById('horizontal-num').value;
+        let json = {
+            reviews: reviews,
+            outputHeight: parseInt(outputHeight),
+            outputWidth: parseInt(outputWidth),
+            language: language
+        }
+        fetch(`/api/wordcloud`, {
+            method: 'POST',
+            body: JSON.stringify(json),
+            headers: {'Content-Type': 'application/json'},
+        }).then(res => {
+            return res.json();
+        }).then(result => {
+            document.getElementById('resultTitle').innerHTML = `Result: WordCloud`;
+            document.getElementById('result').innerHTML = 'WordCloud';
+
+            let line = document.createElement('hr');
+            document.getElementById('result').appendChild(line);
+
+            // Display base64 encoded image data
+            let div = document.createElement('div');
+            div.style.textAlign = 'center';
+            div.style.verticalAlign = 'middle';
+            document.getElementById('result').appendChild(div);
+
+            let img = document.createElement('img');
+            img.src = `${result.url}`;
+            img.height = outputHeight;
+            img.width = outputWidth;
+            div.appendChild(img);
+        }).catch(err => {
+            console.log(err);
+        })
+    }
+
+    function keywordSearch() {
+        let json = {
+            keywords: document.getElementById('keywordList').value,
+            language: parseInt(document.getElementById('language').value),
+        }
+        fetch('/api/social-listening', {
+            method: 'POST',
+            body: JSON.stringify(json),
+            headers: {'Content-Type': 'application/json'},
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            let results = data.results;
+            document.getElementById('resultTitle').innerHTML = `Result: Social Listening`;
+            document.getElementById('result').innerHTML = '';
+
+            results.forEach(item => {
+                let line = document.createElement('hr');
+                document.getElementById('result').appendChild(line);
+
+                let li = document.createElement('li');
+                li.innerHTML = `<b>name:</b> ${item.name}<br/>`;
+                li.innerHTML += `<b>account:</b> @${item.account_name}<br/>`
+                li.innerHTML += `<b>tweet:</b> ${item.text}<br/>`;
+                li.innerHTML += `<b>score:</b> ${item.score}`;
+                document.getElementById('result').appendChild(li);
+            });
+        });
+    }
+
+    function followerSearch() {
+        let followerId = document.getElementById('followerId').value.toString();
+        let json = {
+            followerId: followerId,
+            language: parseInt(document.getElementById('language').value),
+        }
+        fetch('/api/follower-search', {
+            method: 'POST',
+            body: JSON.stringify(json),
+            headers: {'Content-Type': 'application/json'},
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            let results = data.results;
+            document.getElementById('resultTitle').innerHTML = `Result: @${followerId} Follower`;
+            document.getElementById('result').innerHTML = '';
+
+            if (results.length === 0) {
+                let line = document.createElement('hr');
+                document.getElementById('result').appendChild(line);
+                let li = document.createElement('li');
+                li.innerHTML = 'No Follower';
+                document.getElementById('result').appendChild(li);
+            } else {
+                results.forEach(item => {
+                    let line = document.createElement('hr');
+                    document.getElementById('result').appendChild(line);
+
+                    let li = document.createElement('li');
+                    li.innerHTML = `<b>id:</b> ${item.screen_name} <button type='button' onclick='switchFollower("${item.screen_name}")'>Follower Search</button><br/>`;
+                    li.innerHTML += `<b>name:</b> ${item.name}<br/>`;
+                    li.innerHTML += `<b>Twitter URL:</b> <a href="${item.url}" target="_blank">${item.url}</a><br/>`
+                    li.innerHTML += `<b>description:</b> ${item.description}<br/>`;
+                    document.getElementById('result').appendChild(li);
+                });
+            }
+        });
+    }
+
+    function switchFollower(name) {
+        console.log(name);
+        document.getElementById('followerId').value = name;
+        document.getElementById('result').innerHTML = '';
+        followerSearch();
+    }
+
+    /**
+     * Target review evaluation points
+     *
+     * @returns Array[int]
+     */
+    function findRatingList() {
+        let ratingList = [];
+        let parent = document.getElementById('checkBox');
+        for (let i = 0; i < parent.children.length; i++) {
+            let factor = parent.children[i];
+            if (factor.type !== 'checkbox') {
+                continue;
+            }
+            if (factor.checked) {
+                ratingList.push(parseInt(factor.value));
+            }
+        }
+        return ratingList;
+    }
+
+    /**
+     * Extract reviews of target Ratings
+     *
+     * @param csvData
+     * @returns Array[review]
+     */
+    function findReviewsList(csvData) {
+        let ratingList = findRatingList();
+        let LineFeed = String.fromCharCode(10);
+        let lines = csvData.split(LineFeed);
+        let header = lines[0].split(",");
+
+        let contentName = document.getElementById('reviewName').value;
+        let ratingName = document.getElementById('ratingName').value;
+        let contentIndex = header.findIndex(name => name === contentName);
+        let ratingIndex = header.findIndex(name => name === ratingName);
+
+        let reviews = [];
+        for (let i = 1; i < lines.length; ++i) {
+            let cells = lines[i].split(",");
+            if (lines[i].length <= 0 && ratingList.indexOf(parseInt(cells[ratingIndex])) === -1) continue;
+
+            let c = lines[i].split(/,\"/);
+            if (c.length > 1) {
+                // ""付きレビューの場合
+                let t = c[1].split(/\",/);
+                let content = t[0];
+                reviews.push(content);
+            } else {
+                reviews.push(cells[contentIndex]);
+            }
+        }
+        return reviews;
+    }
+</script>
+</body>
+</html>
