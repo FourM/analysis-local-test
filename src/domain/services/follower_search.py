@@ -6,8 +6,6 @@ from typing import Dict, List
 from requests_oauthlib import OAuth1Session
 
 from domain.entities.language_type import LanguageType
-from domain.entities.sentiment import SentimentOutputType
-from domain.services.sentiment import SentimentService
 
 
 class FollowerSearchService:

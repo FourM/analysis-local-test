@@ -6,14 +6,13 @@ from domain.entities.language_type import LanguageType
 from domain.entities.sentiment import SentimentOutputType
 from domain.exceptions import DomainException
 from domain.services.doc2vec import SearchService
+from domain.services.follower_search import FollowerSearchService
 from domain.services.morphological_analysis import get_morphological_analysis
 from domain.services.sentiment import SentimentService
 from domain.services.social_listening import SocialListeningService
 from domain.services.wordcloud import WordCloudService
-from domain.services.follower_search import FollowerSearchService
 
-
-from .schema import doc2vec_schema, sentiment_schema, social_listening_schema, wordcloud_schema, follower_search_schema
+from .schema import doc2vec_schema, follower_search_schema, sentiment_schema, social_listening_schema, wordcloud_schema
 
 api_blueprint = Blueprint('api', __name__)
 
