@@ -148,12 +148,12 @@ src/node_modules
 src/anymanagerapis
 
 # treeTagger
-docker/production/treeTagger/bin
-docker/production/treeTagger/cmd
-docker/production/treeTagger/doc
-docker/production/treeTagger/lib
-docker/production/treeTagger/COPYRIGHT
-docker/production/treeTagger/FILES
-docker/production/treeTagger/README
-docker/production/treeTagger/README.script
-docker/production/treeTagger/Release-Notes
+treeTagger/bin
+treeTagger/cmd
+treeTagger/doc
+treeTagger/lib
+treeTagger/COPYRIGHT
+treeTagger/FILES
+treeTagger/README
+treeTagger/README.script
+treeTagger/Release-Notes

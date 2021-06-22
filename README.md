@@ -4,6 +4,8 @@
 ```shell
 cp .env.example .env
 sudo apt install -y python3.9 python3-pip python3.9-dev mecab libmecab-dev mecab-ipadic mecab-ipadic-utf8 libc6-dev build-essential nkf tk fonts-migmix libboost-dev cmake
+git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git && \
+bash mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -a -y
 ```
 
 Default Python3.9
