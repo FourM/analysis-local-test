@@ -144,8 +144,8 @@ def follower_search():
     if errors:
         return abort(400, {'errors': ['Missing data.']})
 
-    language_type = LanguageType(data['language'])
-    follower_search_service = FollowerSearchService(follower_id=data['followerId'], language_type=language_type)
+    ma_service = get_morphological_analysis(language_type=LanguageType(data['language']))
+    follower_search_service = FollowerSearchService(follower_id=data['followerId'], ma_service=ma_service)
     results = follower_search_service.get_results()
 
     try:

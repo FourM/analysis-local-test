@@ -45,7 +45,7 @@ sort_imports = "isort ./src"
 sort_imports_check = "isort --check ./src"
 lint = "flake8 ./src"
 type_check = "mypy ./src"
-server = "python3 ./src/app.py"
+server = "python ./src/app.py"
 
 [requires]
 python_version = "3.9"

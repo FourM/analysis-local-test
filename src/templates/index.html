@@ -296,7 +296,7 @@
                     li.innerHTML = `<b>id:</b> ${item.screen_name} <button type='button' onclick='switchFollower("${item.screen_name}")'>Follower Search</button><br/>`;
                     li.innerHTML += `<b>name:</b> ${item.name}<br/>`;
                     li.innerHTML += `<b>Twitter URL:</b> <a href="${item.url}" target="_blank">${item.url}</a><br/>`
-                    li.innerHTML += `<b>description:</b> ${item.description}<br/>`;
+                    li.innerHTML += `<b>keyword:</b> ${item.keyword}<br/>`;
                     document.getElementById('result').appendChild(li);
                 });
             }

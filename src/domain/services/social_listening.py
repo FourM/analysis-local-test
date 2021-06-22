@@ -51,9 +51,9 @@ class SocialListeningService:
         tweets = json.loads(req.text)['statuses']
         self.add_attribute_score(tweets)
 
-        list = []
+        tweet_list = []
         for tweet in tweets:
-            list.append(
+            tweet_list.append(
                 {
                     'name': tweet['user']['name'],
                     'account_name': tweet['user']['screen_name'],
@@ -62,4 +62,4 @@ class SocialListeningService:
                 }
             )
 
-        return list
+        return tweet_list
