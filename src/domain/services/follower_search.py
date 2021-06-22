@@ -36,8 +36,9 @@ class FollowerSearchService:
             raise Exception('Limit Over RequestCount')
 
         users = json.loads(req.text)['users']
+        sorted_users = sorted(users, key=lambda x: -x['followers_count'])
         list = []
-        for user in users:
+        for user in sorted_users:
             list.append(
                 {
                     'screen_name': user['screen_name'],
