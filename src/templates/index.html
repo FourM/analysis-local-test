@@ -278,33 +278,44 @@
             return res.json();
         }).then(data => {
             let results = data.results;
-            document.getElementById('resultTitle').innerHTML = `Result: @${followerId} Follower`;
-            document.getElementById('result').innerHTML = '';
+            let title = document.getElementById('resultTitle');
+            title.innerHTML = `Result: @${followerId} Follower`;
+            let result = document.getElementById('result');
+            result.innerHTML = '';
 
             if (results.length === 0) {
                 let line = document.createElement('hr');
-                document.getElementById('result').appendChild(line);
+                result.appendChild(line);
                 let li = document.createElement('li');
                 li.innerHTML = 'No Follower';
-                document.getElementById('result').appendChild(li);
+                result.appendChild(li);
             } else {
+                let d = new Date();
+                let date = d.getFullYear().toString() + (d.getMonth() + 1).toString().padStart(2, '0') + d.getDay().toString().padStart(2, '0');
+                let csvFile = `${date}-${followerId}-follower.csv`;
+                let csv = 'id,name,twitterURL,keyword\n';
                 results.forEach(item => {
                     let line = document.createElement('hr');
-                    document.getElementById('result').appendChild(line);
+                    result.appendChild(line);
 
                     let li = document.createElement('li');
-                    li.innerHTML = `<b>id:</b> ${item.screen_name} <button type='button' onclick='switchFollower("${item.screen_name}")'>Follower Search</button><br/>`;
+                    li.innerHTML = `<b>id:</b> ${item.id} <button type='button' onclick='switchFollower("${item.id}")'>Follower Search</button><br/>`;
                     li.innerHTML += `<b>name:</b> ${item.name}<br/>`;
                     li.innerHTML += `<b>Twitter URL:</b> <a href="${item.url}" target="_blank">${item.url}</a><br/>`
                     li.innerHTML += `<b>keyword:</b> ${item.keyword}<br/>`;
-                    document.getElementById('result').appendChild(li);
+                    result.appendChild(li);
+                    csv +=`${item.id},${item.name},${item.url},${item.keyword}\n`;
                 });
+
+                let bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+                let blob = new Blob([bom, csv], {type: 'text/csv'});
+                let url = (window.URL || window.webkitURL).createObjectURL(blob);
+                title.innerHTML += `　<a type="text/csv" href="${url}" download="${csvFile}"><button type='button'>DownLoad CSV</button></a>`;
             }
         });
     }
 
     function switchFollower(name) {
-        console.log(name);
         document.getElementById('followerId').value = name;
         document.getElementById('result').innerHTML = '';
         followerSearch();
