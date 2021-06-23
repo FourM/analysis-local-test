@@ -291,7 +291,7 @@
                 result.appendChild(li);
             } else {
                 let d = new Date();
-                let date = d.getFullYear().toString() + (d.getMonth() + 1).toString().padStart(2, '0') + d.getDay().toString().padStart(2, '0');
+                let date = d.getFullYear().toString() + (d.getMonth() + 1).toString().padStart(2, '0') + d.getDate().toString().padStart(2, '0');
                 let csvFile = `${date}-${followerId}-follower.csv`;
                 let csv = 'id,name,twitterURL,keyword\n';
                 results.forEach(item => {
@@ -312,12 +312,16 @@
                 let url = (window.URL || window.webkitURL).createObjectURL(blob);
                 title.innerHTML += `　<a type="text/csv" href="${url}" download="${csvFile}"><button type='button'>DownLoad CSV</button></a>`;
             }
+        }).catch(err => {
+            alert('Twitter APIのリクエスト数が上限に達しています。15分ほどお待ちください。');
+            console.log(err);
         });
     }
 
-    function switchFollower(name) {
-        document.getElementById('followerId').value = name;
+    function switchFollower(followerId) {
+        document.getElementById('followerId').value = followerId;
         document.getElementById('result').innerHTML = '';
+        document.getElementById('resultTitle').innerHTML = `Result: @${followerId} Follower`;
         followerSearch();
     }
 

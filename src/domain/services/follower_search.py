@@ -1,7 +1,5 @@
 import json
 import os
-import csv
-import datetime
 from typing import Dict, List
 
 from requests_oauthlib import OAuth1Session
@@ -24,28 +22,22 @@ class FollowerSearchService:
         access_secret = os.getenv('TWITTER_ACCESS_SECRET')
         return OAuth1Session(consumer_key, consumer_secret, access_token, access_secret)
 
-    @property
-    def create_params(self) -> Dict:
-        return {'screen_name': self.follower_id, 'count': 200, 'cursor': -1}
-
     def get_results(self) -> List:
-        req = self.twitter_oauth.get(self.url, params=self.create_params)
+        params = {'screen_name': self.follower_id, 'count': 200, 'cursor': -1}
+        req = self.twitter_oauth.get(self.url, params=params)
         if req.status_code != 200:
             raise Exception('Limit Over RequestCount')
 
         users = json.loads(req.text)['users']
-        # print(len(users))
-        # while json.loads(req.text)['next_cursor'] != 0:
-        #     self.create_params['cursor'] = json.loads(req.text)['next_cursor']
-        #     req = self.twitter_oauth.get(self.url, params=self.create_params)
-        #     if req.status_code != 200:
-        #         raise Exception('Limit Over RequestCount')
-        #     users.append(json.loads(req.text)['users'])
-        #     print(len(users))
+        while json.loads(req.text)['next_cursor'] != 0:
+            params['cursor'] = json.loads(req.text)['next_cursor']
+            req = self.twitter_oauth.get(self.url, params=params)
+            if req.status_code != 200:
+                raise Exception('Limit Over RequestCount')
+            users.extend(json.loads(req.text)['users'])
 
         sorted_users = sorted(users, key=lambda x: -x['followers_count'])
         follower_list = []
-
         for user in sorted_users:
             follower_list.append(
                 {
