@@ -146,7 +146,7 @@ def follower_search():
 
     ma_service = get_morphological_analysis(language_type=LanguageType(data['language']))
     follower_search_service = FollowerSearchService(follower_id=data['followerId'], ma_service=ma_service)
-    results = follower_search_service.get_results()
+    results = follower_search_service.get_results_v2()
 
     try:
         return {'results': results}
