@@ -147,6 +147,9 @@ src/node_modules
 # AnyManager Api
 src/anymanagerapis
 
+# mecab
+mecab-ipadic-neologd
+
 # treeTagger
 treeTagger/bin
 treeTagger/cmd
