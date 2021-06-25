@@ -10,7 +10,6 @@ from domain.services.morphological_analysis import IMorphologicalAnalysisService
 
 class FollowerSearchService:
     url = 'https://api.twitter.com/1.1/followers/list.json'
-    url_v2 = 'https://api.twitter.com/2/users/1287922033993453568/followers' #FourM_AppのID直指定している
 
     def __init__(self, follower_id: str, ma_service: IMorphologicalAnalysisService) -> None:
         self.follower_id = follower_id
@@ -27,12 +26,16 @@ class FollowerSearchService:
     @property
     def twitter_oauth_v2(self) -> List:
         headers = {'Authorization': 'Bearer ' + os.getenv('TWITTER_BEARER_TOKEN')}
+        user_url = 'https://api.twitter.com/2/users/by/username/' + self.follower_id
+        r = requests.get(user_url, headers=headers).json()
+
+        follower_url = 'https://api.twitter.com/2/users/' + r['data']['id'] + '/followers'
         params = {'max_results': 1000, 'user.fields': 'description,public_metrics'}
-        r = requests.get(self.url_v2, headers=headers, params=params).json()
+        r = requests.get(follower_url, headers=headers, params=params).json()
         users: List = r['data']
-        while 'next_token' not in r['meta']:
+        while 'next_token' in r['meta']:
             params['pagination_token'] = r['meta']['next_token']
-            r = requests.get(self.url_v2, headers=headers, params=params).json()
+            r = requests.get(follower_url, headers=headers, params=params).json()
             users.extend(r['data'])
 
         return users
